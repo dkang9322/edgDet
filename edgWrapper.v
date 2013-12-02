@@ -30,7 +30,7 @@ module edgWrapper(reset, clk,
    // We have two degrees of freedom hcount[0] =0,1 in edgedetection.v
    // and counter in edgWrapper.v
 
-   edgedetection edgDetect(reset, clk, edgRGB1, edgRGB2, hcount,
+   edgedetection edgDetect(reset, clk, pix1RGB, pix2RGB, hcount,
 			  edgRGB, edgSel);
 
    
@@ -48,7 +48,7 @@ module edgWrapper(reset, clk,
    always @(posedge clk)
      begin
 	del_edgRGB <= {del_edgRGB[EDG_BUF-24:0], edgRGB};
-	counter <= counter + 1;
+
      end
 
    /*  This is where we output the processed pixels*/
@@ -57,7 +57,7 @@ module edgWrapper(reset, clk,
    wire [35:0] trunc_pixels;
    assign trunc_pixels = {del_edgRGB[47:42], del_edgRGB[39:34], del_edgRGB[31:26], del_edgRGB[23:18], del_edgRGB[15:10], del_edgRGB[7:2]};
    
-									   assign two_proc_pixs = counter ? two_proc_pixs:trunc_pixels;
+									   assign two_proc_pixs = hcount[0] ? two_proc_pixs:trunc_pixels;
 
 endmodule // edgWrapper
 
