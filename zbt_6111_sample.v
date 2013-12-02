@@ -552,13 +552,21 @@ module zbt_6111_sample(beep, audio_reset_b,
    // Process Pixels
    wire [35:0] 	zbt1_proc_pixels;
    wire [18:0] 	zbt1_dwrite_addr; //appropriately delayed address
+
+   edgProc procEdgToZBT1(reset, clk, hcount, vcount, zbt0_two_pixels,
+			 zbt1_write_addr, zbt1_proc_pixels,
+			 zbt1_dwrite_addr);
    
+   /*
+   For Color Reduction*/
+   /*
    pixProc procPixToZBT1(reset, clk, hcount, vcount, zbt0_two_pixels,
 			 zbt1_write_addr, zbt1_proc_pixels,
 			 zbt1_dwrite_addr,
 			 switch[7:5],
 			 switch[1:0],
 			 col_change);
+    */
 
    /* Storing Processed Pixel Value to ZBT bank 1 */
    assign vram_addr1 = my_we1 ? zbt1_dwrite_addr : vram_vga_addr;
