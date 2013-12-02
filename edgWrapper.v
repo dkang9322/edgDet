@@ -30,7 +30,7 @@ module edgWrapper(reset, clk,
    // We have two degrees of freedom hcount[0] =0,1 in edgedetection.v
    // and counter in edgWrapper.v
 
-   edgdetection edgDetect(reset, clk, edgRGB1, edgRGB2, hcount,
+   edgedetection edgDetect(reset, clk, edgRGB1, edgRGB2, hcount,
 			  edgRGB, edgSel);
 
    
