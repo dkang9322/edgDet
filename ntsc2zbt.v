@@ -196,13 +196,22 @@ module ntsc_to_zbt(clk, vclk, fvh, dv, din, ntsc_addr, ntsc_data, ntsc_we, sw);
    reg [35:0] ntsc_data;
    // I think this timing will address the issue
    // Turns out x_delay[30] == 1'b0 is the check we want to perform
-   wire       ntsc_we = sw ? we_edge : (we_edge & (x_delay[30]==1'b0));
+
+   // We don't want debug mode
+   //wire       ntsc_we = sw ? we_edge : (we_edge & (x_delay[30]==1'b0));
+   wire       ntsc_we = we_edge & (x_delay[30]==1'b0);
 
    always @(posedge clk)
      if ( ntsc_we )
        begin
+	  /* Debug Mode */
+	  /*
 	  ntsc_addr <= sw ? myaddr2 : myaddr;	// normal and expanded modes
 	  ntsc_data <= sw ? mydata2 : mydata;
+	   */
+	  ntsc_addr <= myaddr;
+	  ntsc_data <= mydata;
+	  
        end
    
 endmodule // ntsc_to_zbt
