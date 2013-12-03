@@ -53,7 +53,7 @@ module edgedetection(
 
 
    assign select = 1;
-   shiftregister #(.cols(91)) shifter(clock,hcount,sr_grayout,matrixout);
+   shiftregister #(.cols(182)) shifter(clock,hcount,sr_grayout,matrixout);
    /* Want to output the last element of row3 to get one pixel
     value. This is to see the appropriate amount of latency */
    // With cols = 13, should see approximately double the distance
