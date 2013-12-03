@@ -38,8 +38,8 @@ module edgProc(reset, clk,
    parameter DAT_DEL = 36 * DELAY - 1;*/
    
 
-   reg [18:0] addr_del [OLDEST_IND:0];
-   reg [35:0] dat_del  [OLDEST_IND_A:0];
+   reg [18:0] addr_del [OLDEST_IND_A:0];
+   reg [35:0] dat_del  [OLDEST_IND:0];
 
    edgWrapper edg_abstr(reset, clk, dat_del[OLDEST_IND],
 			two_proc_pixs, hcount);
@@ -49,7 +49,7 @@ module edgProc(reset, clk,
      /* Appropriate Delaying via for_loop, unsure of performance*/ 
      begin
 	// Address Delay
-	for (i=1;i<DELAY;i=i+1)
+	for (i=1;i<DELAY_A;i=i+1)
 	  begin
 	     addr_del[i] <= addr_del[i-1];
 	  end
