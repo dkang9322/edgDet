@@ -26,7 +26,7 @@ module edgProc(reset, clk,
    // Note actually delay is half of DELAY
    parameter DELAY = 2;
    parameter OLDEST_IND = DELAY - 1;
-   parameter DELAY_A = DELAY + 3 * 91;
+   parameter DELAY_A = DELAY + 3 * 640;
    parameter OLDEST_IND_A = DELAY_A - 1;
    
    integer 	 i; // Delay for Address
