@@ -30,8 +30,16 @@ module edgWrapper(reset, clk,
    // We have two degrees of freedom hcount[0] =0,1 in edgedetection.v
    // and counter in edgWrapper.v
 
+   edgedetection edgDetect(reset, clk, pix2RGB, pix1RGB, hcount,
+			  edgRGB, edgSel);
+
+
+   /* Original Pixel Passing, lower pixels, then higher*/
+   /* All sort of image defragmentation happened */
+   /*
    edgedetection edgDetect(reset, clk, pix1RGB, pix2RGB, hcount,
 			  edgRGB, edgSel);
+    */
 
    
    /* All under the assumption that we get an edge output

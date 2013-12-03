@@ -24,7 +24,7 @@ module edgProc(reset, clk,
    reg [18:0] 	 proc_pix_addr;
 
    // Note actually delay is half of DELAY
-   parameter DELAY = 640;
+   parameter DELAY = 80;
    parameter ADD_DEL = 19 * DELAY - 1;
    parameter DAT_DEL = 36 * DELAY - 1;
    
