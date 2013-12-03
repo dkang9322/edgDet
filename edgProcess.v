@@ -25,24 +25,47 @@ module edgProc(reset, clk,
 
    // Note actually delay is half of DELAY
    parameter DELAY = 80;
-   parameter ADD_DEL = 19 * DELAY - 1;
-   parameter DAT_DEL = 36 * DELAY - 1;
+   parameter OLDEST_IND = DELAY - 1;
+   integer 	 i;
+   
    
 
-   reg [ADD_DEL:0] addr_del;
-   reg [DAT_DEL:0] dat_del;
+   /*parameter ADD_DEL = 19 * DELAY - 1;
+   parameter DAT_DEL = 36 * DELAY - 1;*/
+   
 
-   edgWrapper edg_abstr(reset, clk, dat_del[DAT_DEL:DAT_DEL-35],
+   reg [18:0] addr_del [OLDEST_IND:0];
+   reg [35:0] dat_del  [OLDEST_IND:0];
+
+   edgWrapper edg_abstr(reset, clk, dat_del[OLDEST_IND],
 			two_proc_pixs, hcount);
    
    
    always @(posedge clk)
+     /* Appropriate Delaying via for_loop, unsure of performance*/ 
      begin
-	dat_del <= {dat_del[DAT_DEL - 36:0], two_pixel_vals};
-	
-	// Let's see what happens if we delay write_addr by more than appropriate
-	addr_del <= {addr_del[ADD_DEL-19:0], write_addr};
-	proc_pix_addr <= addr_del[ADD_DEL:ADD_DEL-18];
+	for (i=1;i<DELAY;i=i+1)
+	  begin
+	     dat_del[i] <= dat_del[i-1];
+	     addr_del[i] <= addr_del[i-1];
+	  end
+	/* Note: Order of execution doesn't matter, its hardware*/
+	dat_del[0] <= two_pixel_vals;
+	addr_del[0] <= write_addr;
+
+	// Outputting address
+	proc_pix_addr <= addr_del[OLDEST_IND];
      end
    
 endmodule // pixProc
+
+/* Previous Attempt To Delay*/
+/* Arrays can only be written index by index */
+/*
+ dat_del[OLDEST_IND:0] <= {dat_del[OLDEST_IND-1:0], two_pixel_vals};
+ 
+ // Let's see what happens if we delay write_addr by more than appropriate
+ addr_del[OLDEST_IND:0] <= {addr_del[OLDEST_IND-1:0], write_addr};
+
+ */
+
