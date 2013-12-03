@@ -61,7 +61,7 @@ module edgProc(reset, clk,
 	addr_del[0] <= write_addr;
 
 	// Outputting address
-	proc_pix_addr <= addr_del[OLDEST_IND];
+	proc_pix_addr <= addr_del[OLDEST_IND_A];
      end
    
 endmodule // pixProc
