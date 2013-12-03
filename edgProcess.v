@@ -24,9 +24,13 @@ module edgProc(reset, clk,
    reg [18:0] 	 proc_pix_addr;
 
    // Note actually delay is half of DELAY
-   parameter DELAY = 80;
+   parameter DELAY = 2;
    parameter OLDEST_IND = DELAY - 1;
-   integer 	 i;
+   parameter DELAY_A = DELAY + 3 * 91;
+   parameter OLDEST_IND_A = DELAY_A - 1;
+   
+   integer 	 i; // Delay for Address
+   integer 	 j; // Delay for Data
    
    
 
@@ -35,7 +39,7 @@ module edgProc(reset, clk,
    
 
    reg [18:0] addr_del [OLDEST_IND:0];
-   reg [35:0] dat_del  [OLDEST_IND:0];
+   reg [35:0] dat_del  [OLDEST_IND_A:0];
 
    edgWrapper edg_abstr(reset, clk, dat_del[OLDEST_IND],
 			two_proc_pixs, hcount);
@@ -44,11 +48,14 @@ module edgProc(reset, clk,
    always @(posedge clk)
      /* Appropriate Delaying via for_loop, unsure of performance*/ 
      begin
+	// Address Delay
 	for (i=1;i<DELAY;i=i+1)
 	  begin
-	     dat_del[i] <= dat_del[i-1];
 	     addr_del[i] <= addr_del[i-1];
 	  end
+	// Data Delay
+	dat_del[1] <= dat_del[0];
+	
 	/* Note: Order of execution doesn't matter, its hardware*/
 	dat_del[0] <= two_pixel_vals;
 	addr_del[0] <= write_addr;
