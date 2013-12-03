@@ -20,9 +20,9 @@
 //////////////////////////////////////////////////////////////////////////////////
 module shiftregister #(parameter cols = 640)
      (         
-    input clock,
-	 input hcount,
-    input [7:0] indata,
+    input 	  clock,
+    input [10:0]  hcount,
+    input [7:0]   indata,
     output [71:0] matrix
     );
 

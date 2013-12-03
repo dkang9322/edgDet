@@ -42,10 +42,28 @@ module sobel(clock,z0,z1,z2,z3,z4,z5,z6,z7,z8,switch,edge_out);
 	
 	//Yet to Apply Threshold
 	//Threshold-
-	//assign edge_out =(sum > 120) ? 0 : 8'hff
 
-     end
+     end // always @ (posedge clock)
+   //assign edge_out = sum[7:0];
+   assign edge_out =(sum > 120) ? 0 : 8'hff;
+   
 
-   assign edge_out =(sum > 120) ? 8'hff : 0;
+   /* Bogus Outputs */
+   /*
+   // Below gave mostly white
+   assign edge_out =(sum > 120) ? 0 : 8'hff;
+
+   //Below gave mostly black
+   //assign edge_out =(sum > 120) ? 8'hff : 0;
+
+   // Below gave mostly black
+   // bitwise-OR of sum[10:8] -> 255 is the threshold value
+   //assign edge_out=(|sum[10:8])?8'hff:sum[7:0];
+
+   // Below gave all mostly black
+   // which means that the MSB bits of sum is probably
+   // all zero
+   //assign edge_out=(|sum[10:8])?0:sum[7:0];
+    */
    
 endmodule
