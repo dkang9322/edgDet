@@ -49,13 +49,17 @@ module edgedetection(
 
    
    /* Seeing whether grayscale image is being computed */
+   /*assign edgeoutputsel={sr_grayout, sr_grayout, sr_grayout};*/
 
-   assign edgeoutputsel={sr_grayout, sr_grayout, sr_grayout};
+
    assign select = 1;
-
+   shiftregister #(.cols(26)) shifter(clock,hcount,sr_grayout,matrixout);
+   /* Want to output the last element of row3 to get one pixel
+    value. This is to see the appropriate amount of latency */
+   // With cols = 13, should see approximately double the distance
+   wire [7:0] 	   shifted_gs = matrixout[23:16];
    
-    
-
+   assign edgeoutputsel = {shifted_gs, shifted_gs, shifted_gs};
 
    /* Actual Full Implementation */
    /*
