@@ -49,15 +49,16 @@ module edgedetection(
 
    
    /* Seeing whether grayscale image is being computed */
-   /*
+
    assign edgeoutputsel={sr_grayout, sr_grayout, sr_grayout};
    assign select = 1;
-    */
+
    
     
 
-   /* Actual Full Implementation */
 
+   /* Actual Full Implementation */
+   /*
    shiftregister shifter(clock,hcount,sr_grayout,matrixout);
    
    sobel edgedetect(clock,matrixout[71:64],matrixout[63:56],
@@ -65,7 +66,7 @@ module edgedetection(
 		    matrixout[31:24],matrixout[23:16],matrixout[15:8],
 		    matrixout[7:0],swi,edgeoutputsobel);
    selectbit selector(clock,edgeoutputsobel,edgeoutputsel,select);
-    
+    */
 
    
 

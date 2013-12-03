@@ -30,8 +30,14 @@ module edgWrapper(reset, clk,
    // We have two degrees of freedom hcount[0] =0,1 in edgedetection.v
    // and counter in edgWrapper.v
 
-   edgedetection edgDetect(reset, clk, pix2RGB, pix1RGB, hcount,
-			  edgRGB, edgSel);
+
+   /*Switching Order of pixels to see what effect this has
+    Testing with Grayscale image */
+
+    
+    edgedetection edgDetect(reset, clk, pix1RGB, pix2RGB, hcount,
+    edgRGB, edgSel);
+    
 
 
    /* Original Pixel Passing, lower pixels, then higher*/
