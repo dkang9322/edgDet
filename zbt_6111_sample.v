@@ -18,8 +18,6 @@
 // We use a very simple ZBT interface, which does not involve any clock
 // generation or hiding of the pipelining.  See zbt_6111.v for more info.
 //
-// switch[7] selects between display of NTSC video and test bars
-// switch[6] is used for testing the NTSC decoder
 // switch [1:0] is used for the color reduction selection
 // switch [7:5] is used for the color reduction value
 // switch [4] used for switching between grayscale and edgeOut
@@ -436,7 +434,10 @@ module zbt_6111_sample(beep, audio_reset_b,
    wire hsync,vsync,blank;
    xvga xvga1(clk,hcount,vcount,hsync,vsync,blank);
 
-   // wire up to ZBT ram
+   //--------------------------------------------------------------------------------
+   // ZBT Wiring Up
+   //--------------------------------------------------------------------------------
+   // wire up to ZBT ram bank 0
 
    wire [35:0] vram_write_data;
    wire [35:0] vram_read_data;
@@ -463,23 +464,23 @@ module zbt_6111_sample(beep, audio_reset_b,
 		 ram1_we_b, ram1_address, ram1_data, ram1_cen_b);
    
 
-   /*------------------------------------------------------------
-    Color Modification
-    -------------------------------------------------------------
-    Adding RGB color
-    */
-
-   //Potential Editing Needed
+   //--------------------------------------------------------------------------------
+   // VGA Display Module
+   //--------------------------------------------------------------------------------
    // generate pixel value from reading ZBT memory
    wire [17:0] 	vr_pixel;
    wire [18:0] 	vram_vga_addr;
 
-   //Need to expand definintion of vram_display
+   //vram_display definition expanded to take in read values from ZBT0&ZBT1
+   //This is for the dual display, dual write
    vram_display vd1(reset,clk,hcount,vcount,vr_pixel,
 		    vram_vga_addr,vram_read_data, 
 		    vram_read_data1,
 		    switch[2]);
 
+   //--------------------------------------------------------------------------------
+   // Camera Input to Digital Conversion to ZBT0 (Hard-work: decoding, initialization)
+   //--------------------------------------------------------------------------------
    // ADV7185 NTSC decoder interface code
    // adv7185 initialization module
    adv7185init adv7185(.reset(reset), .clock_27mhz(clock_27mhz), 
@@ -501,47 +502,49 @@ module zbt_6111_sample(beep, audio_reset_b,
    wire [18:0] ntsc_addr;
    wire [35:0] ntsc_data;
    wire        ntsc_we;
-   // Currently writing only the intensity values
-   // Now edited such that ycrcb values are full 30 bits
    ntsc_to_zbt n2z (clk, tv_in_line_clock1, fvh, dv, ycrcb,
 		    ntsc_addr, ntsc_data, ntsc_we, switch[6]);
 
-   /* Pattern Generator Code
-   // code to write pattern to ZBT memory
-   reg [31:0] 	count;
-   always @(posedge clk) count <= reset ? 0 : count + 1;
 
-   wire [18:0] 	vram_pat_addr = count[0+18:0];
-   wire [35:0] 	vpat = ( switch[1] ? {4{count[3+3:3],4'b0}}
-			 : {4{count[3+4:4],4'b0}} );
+   //--------------------------------------------------------------------------------
+   // 1.Write Enable Signals for ZBT0 and ZBT1;
+   // 2.Data Write/Read for ZBT 0
+   //--------------------------------------------------------------------------------
+   /*
+    Rationale for my_we changing every other clock cycle
+    is that hcount[0]=0 -> then pixel value available
+    2 clock cycles later (Edited), originally [1:0] 2'd2
 
-   // mux selecting read/write to memory based on which write-enable is chosen
-
-   wire 	sw_ntsc = ~switch[7];
+    ZBT bank 0 we/write data
+    Adding condition to we such that check for swtich[3]
+    For processing, we write to ZBT bank 1, always
     */
-   //Rational is that hcount[0]=0 -> then pixel value available
-   //2 clock cycles later (Edited), originally [1:0] 2'd2
-
-   // ZBT bank 0 we/write data
-   // Adding condition to we such that check for swtich[3]
-   // For processing, we write to ZBT bank 1, always
    wire        my_we = (hcount[0]==1'd1);
-   wire [18:0] 	write_addr = ntsc_addr;
-   wire [35:0] 	write_data = ntsc_data;
+   wire [18:0] write_addr = ntsc_addr;
+   wire [35:0] write_data = ntsc_data;
 
-//   wire 	write_enable = sw_ntsc ? (my_we & ntsc_we) : my_we;
-//   assign 	vram_addr = write_enable ? write_addr : vram_vga_addr;
-//   assign 	vram_we = write_enable;
+   // Below Commented out code used in debug mode in original
+   /*
+    wire 	write_enable = sw_ntsc ? (my_we & ntsc_we) : my_we;
+    assign 	vram_addr = write_enable ? write_addr : vram_vga_addr;
+    assign 	vram_we = write_enable;
+    */
+   
    assign 	vram_addr = my_we ? write_addr : vram_vga_addr;
    assign 	vram_we = my_we;
    assign 	vram_write_data = write_data;
 
-   //ZBT bank 1 we/write data
-   //Note we are using the same write_addr/write_data as ZBT bank 0
-   //Supervisor needs to generate the appropriate write_addr and appropriate delay
+   /*
+    ZBT bank 1 we/write data
+    Note we are using the same write_addr/write_data as ZBT bank 0
+    Supervisor needs to generate the appropriate write_addr and appropriate delay
+    */
    wire 	my_we1 = switch[3] ? (hcount[0]==1'd1): 0;
 
-   // Pixel Reader
+   //--------------------------------------------------------------------------------
+   // Read Pixel from ZBT0
+   //--------------------------------------------------------------------------------
+
    wire [35:0] 	zbt0_two_pixels;
    // Note zbt1_write_addr = vram_vga_addr
    wire [18:0] 	zbt1_write_addr; // This will be appropriately delayed
@@ -549,6 +552,12 @@ module zbt_6111_sample(beep, audio_reset_b,
    readPix pixFromZBT0(reset, clk, hcount, vcount, zbt0_two_pixels,
 		       vram_read_data, zbt1_write_addr);
 
+
+   //--------------------------------------------------------------------------------
+   // Edge Detection Module
+   //--------------------------------------------------------------------------------
+
+    
    // Process Pixels
    wire [35:0] 	zbt1_proc_pixels;
    wire [18:0] 	zbt1_dwrite_addr; //appropriately delayed address
@@ -557,6 +566,10 @@ module zbt_6111_sample(beep, audio_reset_b,
 			zbt1_write_addr, zbt1_proc_pixels,
 			zbt1_dwrite_addr, switch[4]);
    
+
+   //--------------------------------------------------------------------------------
+   // Color Reduction Module
+   //--------------------------------------------------------------------------------
    
    /*
    pixProc procPixToZBT1(reset, clk, hcount, vcount, zbt0_two_pixels,
@@ -566,31 +579,40 @@ module zbt_6111_sample(beep, audio_reset_b,
 			 switch[1:0],
 			 col_change);
     */
+
+
+   /* 
+    --------------------------------------------------------------------------------
+    Data Pins to ZBT 1
+    
+    On Write (if switch[3] ON, then writes on every other clock edge)
+    Data Wire to ZBT1: zbt1_proc_pixels
+    Addr Wire to ZBT1: zbt1_dwrite_addr
+    
+    On Read
+    Data Wire to ZBT1: vram_read_data1 (only used in vram_display)
+    Addr Wire to ZBT1: vram_vga_addr
+    --------------------------------------------------------------------------------
+    */
    
    /* Storing Processed Pixel Value to ZBT bank 1 */
    assign vram_addr1 = my_we1 ? zbt1_dwrite_addr : vram_vga_addr;
    assign vram_we1 = my_we1;
    assign vram_write_data1 = zbt1_proc_pixels;
    
-   
-   /* Simply storing data from ZBT bank 0 to ZBT bank 1 */
-   /* 
-   // Store what I read from ZBT bank 0 to ZBT bank 1
-   assign vram_addr1 = my_we1 ? zbt1_write_addr : vram_vga_addr;
-   assign vram_we1 = my_we1;
-   assign vram_write_data1 = zbt0_two_pixels;
-    */
-   //To use Color Inversion, uncomment the following line
-   //assign vram_write_data1 = ~write_data;
+
+
+   //--------------------------------------------------------------------------------
+   // VRAM Output Pixels
+   //--------------------------------------------------------------------------------
 
    // select output pixel data
-
-   //Potential Editing Needed
    reg [17:0] 	pixel;
    reg 	b,hs,vs;
 
    always @(posedge clk)
      begin
+	//Below Commented out since used in debugging mode
 	//pixel <= switch[0] ? {hcount[8:6],5'b0} : vr_pixel;
 	pixel <= vr_pixel;
 	b <= blank;
@@ -613,6 +635,10 @@ module zbt_6111_sample(beep, audio_reset_b,
    
    assign led = ~{vram_addr[18:13],reset,switch[0]};
 
+
+   //--------------------------------------------------------------------------------
+   // HEX DISPLAY DATA DEFINITION: UNUSED
+   //--------------------------------------------------------------------------------
    always @(posedge clk)
      // dispdata <= {vram_read_data,9'b0,vram_addr};
      dispdata <= {ntsc_data,9'b0,ntsc_addr};
