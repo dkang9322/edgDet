@@ -27,10 +27,11 @@ module edgedetection(
 		     input [10:0]  hcount,
 		     output [23:0] edgeoutputsel,
 		     output 	   select,
-		     input debug
+		     input grayscale
 		     );
 
-
+   // Intermediate grayscale outputs that will be multiplexed
+   // and passed into the shift register
    wire [7:0] 	  grayout, grayout1;
    wire [7:0] 	  sr_grayout;
    
@@ -40,53 +41,38 @@ module edgedetection(
    wire [7:0] 	   edgeoutputsobel;
 
 
-   /* Making sure that we take in two pixels at a time
-     Includes Muxing to shift_register*/
+   //--------------------------------------------------------------------------------
+   // Grayscale Module: Parallel Calculation of Two Pixels at a time
+   //--------------------------------------------------------------------------------
    rgb2gray converter(clock,rgb,grayout);
    rgb2gray converter2(clock, rgb1, grayout1);
 
    assign sr_grayout = hcount[0] ? grayout : grayout1;
 
-
-   
-   /* Seeing whether grayscale image is being computed */
-   /*assign edgeoutputsel={sr_grayout, sr_grayout, sr_grayout};*/
-
-
-   /* Stage ii Debugging */   
-   /* Want to output the last element of row3 to get one pixel
-    value. This is to see the appropriate amount of latency */
-
-   assign select = 1;
-				       shiftregister #(.cols(1344)) shifter(clock,hcount,sr_grayout,matrixout);
-   // With cols = 13, should see approximately double the distance
+   shiftregister #(.cols(1344)) shifter(clock,hcount,sr_grayout,matrixout);
    wire [7:0] 	   shifted_gs = matrixout[23:16];
 
-   // Simply added sobel to see if this changes anything
+   //--------------------------------------------------------------------------------
+   // Sobel Module
+   //--------------------------------------------------------------------------------
    wire [7:0] 	   sobel_out;
-   
-   //assign edgeoutputsel = {shifted_gs, shifted_gs, shifted_gs};
-   assign  edgeoutputsel = debug ? {shifted_gs, shifted_gs, shifted_gs} :{sobel_out, sobel_out, sobel_out};
-   
-   
    sobel edgedetect(clock,matrixout[71:64],matrixout[63:56],
 		    matrixout[55:48],matrixout[47:40],matrixout[39:32],
 		    matrixout[31:24],matrixout[23:16],matrixout[15:8],
 		    matrixout[7:0],swi,sobel_out);
 
-
-   /* Actual Full Implementation */
-   /*
-   shiftregister #(.cols(1024)) shifter(clock,hcount,sr_grayout,matrixout);
    
-   sobel edgedetect(clock,matrixout[71:64],matrixout[63:56],
-		    matrixout[55:48],matrixout[47:40],matrixout[39:32],
-		    matrixout[31:24],matrixout[23:16],matrixout[15:8],
-		    matrixout[7:0],swi,edgeoutputsobel);
 
-   selectbit selector(clock,edgeoutputsobel,edgeoutputsel,select);
-    */
+   
+   //--------------------------------------------------------------------------------
+   // SelectBit Generation
+   //--------------------------------------------------------------------------------
+   wire [23:0] 	   sobel_rgb;
+   
+   selectbit selector(clock, sobel_out, sobel_rgb, select);
 
+   assign  edgeoutputsel = grayscale ? {shifted_gs, shifted_gs, shifted_gs} :~sobel_rgb;
+   // To be visually pleasant, let's display the inversion of actual
    
 
 endmodule

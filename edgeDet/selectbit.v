@@ -19,19 +19,19 @@
 //
 //////////////////////////////////////////////////////////////////////////////////
 module selectbit(
-	 input clock,
-    input [7:0] edgein,
-    output [23:0] edgeout,
-    output reg select
-    );
+		 input 	       clock,
+		 input [7:0]   edgein,
+		 output [23:0] edgeout,
+		 output reg    select
+		 );
 
-always @ (posedge clock)
-begin
+   always @ (posedge clock)
+     begin
 	if(edgein==8'hFF)
-	select<=0;
+	  select<=0;
 	else
-	select<=1;
-end
+	  select<=1;
+     end
 
-assign edgeout = {edgein,edgein,edgein,edgein};
+   assign edgeout = {edgein,edgein,edgein};
 endmodule

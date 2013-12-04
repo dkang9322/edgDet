@@ -2,7 +2,7 @@ module edgWrapper(reset, clk,
 		  two_pixel_vals,
 		  two_proc_pixs,
 		  hcount,
-		  debug_switch
+		  gs_switch
 		  );
    /*
     This function is a wrapper for the edgeDetect pixel written by
@@ -13,47 +13,39 @@ module edgWrapper(reset, clk,
    output [35:0] two_proc_pixs;
 
    input [10:0]  hcount;
-   input 	 debug_switch;
+   input 	 gs_switch; //True if we want to display grayscale data
    
-   
-
    //Input to edgedetection
    wire [23:0] 	 pix1RGB, pix2RGB;
    
    assign pix1RGB = {two_pixel_vals[17:12], 2'b0, two_pixel_vals[11:6], 2'b0, two_pixel_vals[5:0], 2'b0};
    assign pix2RGB = {two_pixel_vals[17+18:12+18], 2'b0, two_pixel_vals[11+18:6+18], 2'b0, two_pixel_vals[5+18:0+18], 2'b0};
 
-   //Output to edgedetection
+   //Outputs of edgedetection
    wire [23:0] 	 edgRGB;
-   // Note that we'll need to change edgRGB pretty rapidly
-   // i.e. have a 2-time delay
    wire 	 edgSel;
-   
-   // first RGb -> lower pixels
-   // lower pixels go to shift_register on hcount[0] == 0
-   // We have two degrees of freedom hcount[0] =0,1 in edgedetection.v
-   // and counter in edgWrapper.v
 
-
-   /*Switching Order of pixels to see what effect this has
-    Testing with Grayscale image */
-
-    
-    edgedetection edgDetect(reset, clk, pix1RGB, pix2RGB, hcount,
-    edgRGB, edgSel, debug_switch);
-    
-
-
-   /* Original Pixel Passing, lower pixels, then higher*/
-   /* All sort of image defragmentation happened */
+   /* Various Test Comments for Switching Order of pixel passing *
    /*
+    first RGb -> lower pixels
+    lower pixels go to shift_register on hcount[0] == 0
+    We have two degrees of freedom hcount[0] =0,1 in edgedetection.v
+    and counter in edgWrapper.v
+
+    Switching of pix1RGB, pix2RGB order does not affect output of system
+    Original Pixel Passing, lower pixels, then higher
+    All sort of image defragmentation happened
+   */
    edgedetection edgDetect(reset, clk, pix1RGB, pix2RGB, hcount,
-			  edgRGB, edgSel);
-    */
+			   edgRGB, edgSel, gs_switch);
 
    
    /* All under the assumption that we get an edge output
-     every clock cycle*/
+    every clock cycle
+
+    We want to hold our output, two_proc_pixs, for two clock cycles
+    since we want to output two NEW pixel data every two clock cycles
+    */
    parameter DELAY = 2;
    parameter EDG_BUF = DELAY * 24 - 1;
    
@@ -75,7 +67,7 @@ module edgWrapper(reset, clk,
    wire [35:0] trunc_pixels;
    assign trunc_pixels = {del_edgRGB[47:42], del_edgRGB[39:34], del_edgRGB[31:26], del_edgRGB[23:18], del_edgRGB[15:10], del_edgRGB[7:2]};
    
-									   assign two_proc_pixs = hcount[0] ? two_proc_pixs:trunc_pixels;
+   assign two_proc_pixs = hcount[0] ? two_proc_pixs:trunc_pixels;
 
 endmodule // edgWrapper
 
