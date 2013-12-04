@@ -1,7 +1,9 @@
 module edgWrapper(reset, clk,
 		  two_pixel_vals,
 		  two_proc_pixs,
-		  hcount);
+		  hcount,
+		  debug_switch
+		  );
    /*
     This function is a wrapper for the edgeDetect pixel written by
     Tarun, to be able to edgeDetect two pixels in cascade
@@ -11,6 +13,8 @@ module edgWrapper(reset, clk,
    output [35:0] two_proc_pixs;
 
    input [10:0]  hcount;
+   input 	 debug_switch;
+   
    
 
    //Input to edgedetection
@@ -36,7 +40,7 @@ module edgWrapper(reset, clk,
 
     
     edgedetection edgDetect(reset, clk, pix1RGB, pix2RGB, hcount,
-    edgRGB, edgSel);
+    edgRGB, edgSel, debug_switch);
     
 
 

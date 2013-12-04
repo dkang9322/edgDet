@@ -20,14 +20,15 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 module edgedetection(
-    input 	  reset,
-    input 	  clock,
-    input [23:0]  rgb, // This corresponds to the lower_pixels in ZBT [ZBT[17:0]]
-    input [23:0]  rgb1, // This corresponds to the higher_pixels in ZBT
-    input [10:0]  hcount,
-    output [23:0] edgeoutputsel,
-    output 	  select
-    );
+		     input 	   reset,
+		     input 	   clock,
+		     input [23:0]  rgb, // This corresponds to the lower_pixels in ZBT [ZBT[17:0]]
+		     input [23:0]  rgb1, // This corresponds to the higher_pixels in ZBT
+		     input [10:0]  hcount,
+		     output [23:0] edgeoutputsel,
+		     output 	   select,
+		     input debug
+		     );
 
 
    wire [7:0] 	  grayout, grayout1;
@@ -55,25 +56,36 @@ module edgedetection(
    /* Stage ii Debugging */   
    /* Want to output the last element of row3 to get one pixel
     value. This is to see the appropriate amount of latency */
-   /*
+
    assign select = 1;
-   shiftregister #(.cols(640)) shifter(clock,hcount,sr_grayout,matrixout);
+				       shiftregister #(.cols(1344)) shifter(clock,hcount,sr_grayout,matrixout);
    // With cols = 13, should see approximately double the distance
    wire [7:0] 	   shifted_gs = matrixout[23:16];
+
+   // Simply added sobel to see if this changes anything
+   wire [7:0] 	   sobel_out;
    
-   assign edgeoutputsel = {shifted_gs, shifted_gs, shifted_gs};
-   */
+   //assign edgeoutputsel = {shifted_gs, shifted_gs, shifted_gs};
+   assign  edgeoutputsel = debug ? {shifted_gs, shifted_gs, shifted_gs} :{sobel_out, sobel_out, sobel_out};
+   
+   
+   sobel edgedetect(clock,matrixout[71:64],matrixout[63:56],
+		    matrixout[55:48],matrixout[47:40],matrixout[39:32],
+		    matrixout[31:24],matrixout[23:16],matrixout[15:8],
+		    matrixout[7:0],swi,sobel_out);
+
 
    /* Actual Full Implementation */
-
-   shiftregister shifter(clock,hcount,sr_grayout,matrixout);
+   /*
+   shiftregister #(.cols(1024)) shifter(clock,hcount,sr_grayout,matrixout);
    
    sobel edgedetect(clock,matrixout[71:64],matrixout[63:56],
 		    matrixout[55:48],matrixout[47:40],matrixout[39:32],
 		    matrixout[31:24],matrixout[23:16],matrixout[15:8],
 		    matrixout[7:0],swi,edgeoutputsobel);
-   selectbit selector(clock,edgeoutputsobel,edgeoutputsel,select);
 
+   selectbit selector(clock,edgeoutputsobel,edgeoutputsel,select);
+    */
 
    
 

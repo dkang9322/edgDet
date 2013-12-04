@@ -45,7 +45,8 @@ module sobel(clock,z0,z1,z2,z3,z4,z5,z6,z7,z8,switch,edge_out);
 
      end // always @ (posedge clock)
    //assign edge_out = sum[7:0];
-   assign edge_out =(sum > 120) ? 0 : 8'hff;
+
+     assign edge_out =(sum > 120) ? 8'hff : 0;
    
 
    /* Bogus Outputs */
@@ -54,6 +55,7 @@ module sobel(clock,z0,z1,z2,z3,z4,z5,z6,z7,z8,switch,edge_out);
    assign edge_out =(sum > 120) ? 0 : 8'hff;
 
    //Below gave mostly black
+    //assign edge_out =(sum > 120) ? 0 : 8'hff;
    //assign edge_out =(sum > 120) ? 8'hff : 0;
 
    // Below gave mostly black

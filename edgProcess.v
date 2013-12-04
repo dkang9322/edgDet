@@ -3,7 +3,8 @@ module edgProc(reset, clk,
 	       two_pixel_vals, // Data Input to be processed
 	       write_addr, //Data Address to write in ZBT bank 1
 	       two_proc_pixs, // Processed Pixel
-	       proc_pix_addr
+	       proc_pix_addr,
+	       debug_switch
 	       /*
 	       switch_vals, // switches to choose num_shifts
 	       switch_sels, // switches to choose HSV
@@ -17,62 +18,24 @@ module edgProc(reset, clk,
    input [18:0] write_addr; 
    output [35:0] two_proc_pixs;
    output [18:0] proc_pix_addr;
+   input 	 debug_switch;
+   
 
 
    wire [35:0] 	 two_proc_pixs;
    
-   reg [18:0] 	 proc_pix_addr;
+   wire [18:0] 	 proc_pix_addr;
 
-   // Note actually delay is half of DELAY
-   parameter DELAY = 2;
-   parameter OLDEST_IND = DELAY - 1;
-   parameter DELAY_A = DELAY + 3 * 640;
-   parameter OLDEST_IND_A = DELAY_A - 1;
-   
-   integer 	 i; // Delay for Address
-   integer 	 j; // Delay for Data
-   
-   
 
-   /*parameter ADD_DEL = 19 * DELAY - 1;
-   parameter DAT_DEL = 36 * DELAY - 1;*/
+   edgWrapper edg_abstr(reset, clk, two_pixel_vals,
+			two_proc_pixs, hcount, debug_switch);
    
+   //forecast hcount & vcount 8 clock cycles ahead
+   wire [10:0] 	 hcount_f = (hcount >= 1048) ? (hcount - 1048) : (hcount + 8);
+   wire [9:0] vcount_f = (hcount >= 1048) ? ((vcount == 805) ? 0 : vcount + 1) : vcount;
 
-   reg [18:0] addr_del [OLDEST_IND_A:0];
-   reg [35:0] dat_del  [OLDEST_IND:0];
-
-   edgWrapper edg_abstr(reset, clk, dat_del[OLDEST_IND],
-			two_proc_pixs, hcount);
    
+   assign proc_pix_addr = {vcount_f, hcount_f[9:1]};
    
-   always @(posedge clk)
-     /* Appropriate Delaying via for_loop, unsure of performance*/ 
-     begin
-	// Address Delay
-	for (i=1;i<DELAY_A;i=i+1)
-	  begin
-	     addr_del[i] <= addr_del[i-1];
-	  end
-	// Data Delay
-	dat_del[1] <= dat_del[0];
-	
-	/* Note: Order of execution doesn't matter, its hardware*/
-	dat_del[0] <= two_pixel_vals;
-	addr_del[0] <= write_addr;
-
-	// Outputting address
-	proc_pix_addr <= addr_del[OLDEST_IND_A];
-     end
    
 endmodule // pixProc
-
-/* Previous Attempt To Delay*/
-/* Arrays can only be written index by index */
-/*
- dat_del[OLDEST_IND:0] <= {dat_del[OLDEST_IND-1:0], two_pixel_vals};
- 
- // Let's see what happens if we delay write_addr by more than appropriate
- addr_del[OLDEST_IND:0] <= {addr_del[OLDEST_IND-1:0], write_addr};
-
- */
-

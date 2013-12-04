@@ -22,7 +22,7 @@
 // switch[6] is used for testing the NTSC decoder
 // switch [1:0] is used for the color reduction selection
 // switch [7:5] is used for the color reduction value
-//
+// switch [4] used for switching between grayscale and edgeOut
 //
 // Bug fix: Jonathan P. Mailoa <jpmailoa@mit.edu>
 // Date   : 11-May-09
@@ -555,7 +555,7 @@ module zbt_6111_sample(beep, audio_reset_b,
 
    edgProc edgPixToZBT1(reset, clk, hcount, vcount, zbt0_two_pixels,
 			zbt1_write_addr, zbt1_proc_pixels,
-			zbt1_dwrite_addr);
+			zbt1_dwrite_addr, switch[4]);
    
    
    /*
